@@ -1,4 +1,4 @@
-import { Environment } from '~app/environments';
+import { Environment } from '~app/environment';
 import { Device, DeviceVariable, IPLC, Tag } from '.';
 import { AddressSpace, DataType, ISessionContext, Namespace, OPCUAServer, StatusCodes, UAObject, Variant} from 'node-opcua';
 import { availableMemory } from '~app/common/helpers';
