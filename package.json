@@ -1,0 +1,38 @@
+{
+  "name": "opcua-client",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p . && cp tsconfig.build.json dist/tsconfig.json && cp config.json dist/config.json",
+    "lint": "eslint --ext .js,.ts .",
+    "lint-fix": "eslint --fix --ext .js,.ts .",
+    "lint-prettier": "prettier '**/*.{yml,yaml,md}' --write",
+    "lint-prettier-ci": "prettier '**/*.{yml,yaml,md}' --check",
+    "postbuild": "cp package.json dist/package.json",
+    "start": "ts-node src/index.ts",
+    "start:local": "ts-node -r tsconfig-paths/register src/index.ts",
+    "test": "jest"
+  },
+  "author": "Johnathan Sanders",
+  "license": "UNLICENSED",
+  "description": "",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/jsonpath": "^0.2.4",
+    "@types/node": "^22.10.2",
+    "eslint": "^9.16.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "ethernet-ip": "^1.2.5",
+    "jsonpath": "^1.1.1",
+    "node-opcua": "^2.138.1",
+    "rxjs": "^7.8.1",
+    "tsconfig-paths": "^4.2.0"
+  }
+}
