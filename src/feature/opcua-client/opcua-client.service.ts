@@ -8,20 +8,13 @@ import {
     StatusCodes,
     DataType,
     ClientSession,
-    makeBrowsePath,
-    NodeId,
-    NodeIdLike,
-    NodeClassMask,
     BrowseDirection,
     ResultMask,
     NodeIdType,
     BrowseDescriptionLike,
     ReferenceTypeIds,
     makeExpandedNodeId,
-    WriteValueOptions,
-    DataValueLike,
     ClientSubscription,
-    ServerSession,
     CreateSubscriptionRequestOptions,
     ClientMonitoredItem,
   } from 'node-opcua';
@@ -31,8 +24,6 @@ import {
 export class OPCClient {
     private client!: OPCUAClient;
     private endpointUrl: string;
-    private isClientCreated$: Subject<boolean> = new Subject<boolean>();
-    private isConnected$: Subject<boolean> = new Subject<boolean>();
     private namespace: string;
     private session?: ClientSession;
     private subscription?: ClientSubscription;
@@ -42,25 +33,6 @@ export class OPCClient {
     constructor(endpointUrl: string, namespace: string) {
         this.endpointUrl = endpointUrl;
         this.namespace = namespace;
-        
-        // this.isConnected$.subscribe((status: boolean) => {
-        //     console.log(status);
-        //     if (status) {
-        //         this.client?.withSessionAsync(this.endpointUrl, async (session: ClientSession) => { 
-        //             this.session = session;
-        //             console.log('Session created!');
-        //             this.createSubscription();
-        //             console.log('Subscription created!');
-        //         });
-        //     }
-        // });
-        
-               
-        // this.client.addListener('backoff', () => console.log('retrying connection'));
-        // this.client.addListener('connected', () => {
-        //     console.log('OPCUA Client Connected!');
-        //     this.isConnected$.next(true);
-        // });
         this.ready = new Promise(async (resolve, reject) => {
             try {
                 this.client = await this.createClient();
@@ -79,21 +51,6 @@ export class OPCClient {
                 reject(error);
             }
         });
-        // this.isClientCreated$.subscribe((status: boolean) => {
-        //     console.log(status);
-        //     if (status) {
-        //         this.client!.on('backoff', () => console.log('retrying connection'));
-        //         this.client!.on('connected', () => {
-        //             console.log('OPCUA Client Connected!');
-        //             this.isConnected$.next(true);
-        //         });
-        //         this.client!.on('abort', () => {
-        //             console.error('OPCUA Client Aborted the connection');
-        //             //this.isConnected$.next(false);
-        //         });
-        //     }
-        // });
-        
     }
 
     private async createClient(endpointMustExist: boolean = false, initialDelay: number = 2000, maxDelay: number = 10 * 1000, maxRetry: number = 2): Promise<OPCUAClient> {
@@ -153,12 +110,6 @@ export class OPCClient {
                 
                 const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
                 
-                // this.subscription.on('changed', (dataValue: DataValue) => {
-                //     this.subscription$.next({action: 'changed', value: dataValue});
-                // });
-                // this.subscription.addListener('changed', (dataValue: DataValue) => {
-                //     this.subscription$.next({action: 'changed', value: dataValue});
-                // });
                 const monitoredItems: any[] = [];
                 nodes.forEach((node: string) => {
                     monitoredItems.push(ClientMonitoredItem.create(
@@ -174,11 +125,19 @@ export class OPCClient {
                         },
                         TimestampsToReturn.Both
                     ).on('changed', (dataValue: DataValue) => {
-                        this.subscription$.next({action: 'changed', value: dataValue});
+                        this.subscription$.next({action: 'changed', value: {
+                                code: dataValue.statusCode.toString(),
+                                serverTimestamp: dataValue.serverTimestamp,
+                                sourceTimestamp: dataValue.sourceTimestamp,
+                                tag: nodes[node.split('.').length -1],
+                                type2: DataType[dataValue.value.dataType],
+                                type: dataValue.value.dataType.toString(),
+                                value: dataValue.value.value
+                            }
+                        });
                     }));
                 });
                resolve();
-                
             } catch (error) {
                 reject(error);
             }
