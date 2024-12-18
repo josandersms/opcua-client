@@ -136,7 +136,7 @@ export class OPCClient {
                                 statusCode: dataValue.statusCode.value,
                                 tag: nodeName,
                                 type: DataType[dataValue.value.dataType],
-                                typeCode: dataValue.value.dataType.toString(),
+                                typeCode: dataValue.value.dataType,
                                 value: dataValue.value.value
                             }
                         });
