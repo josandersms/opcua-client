@@ -23,6 +23,7 @@ import {
     ClientSubscription,
     ServerSession,
     CreateSubscriptionRequestOptions,
+    ClientMonitoredItem,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
   
@@ -65,7 +66,14 @@ export class OPCClient {
                 this.client = await this.createClient();
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
-                
+                this.subscription = await this.createSubscription(this.session!, {
+                    requestedPublishingInterval: 1000,
+                    requestedLifetimeCount: 100,
+                    requestedMaxKeepAliveCount: 20,
+                    maxNotificationsPerPublish: 10,
+                    publishingEnabled: true,
+                    priority: 10,
+                });
                 resolve(undefined);
             } catch (error) {
                 reject(error);
@@ -133,44 +141,44 @@ export class OPCClient {
     public async subscribe(nodes: string[]): Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
-                const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
-                const subscription: ClientSubscription = await this.createSubscription(this.session!, {
-                    requestedPublishingInterval: 1000,
-                    requestedLifetimeCount: 100,
-                    requestedMaxKeepAliveCount: 20,
-                    maxNotificationsPerPublish: 10,
-                    publishingEnabled: true,
-                    priority: 10,
+                this.subscription!.on('started', () => {
+                    this.subscription$.next({action: 'created'});
                 });
-                this.subscription = subscription;
-               
-                this.subscription.monitorItems(
-                    nodes.map((node: string) => {
-                        return {
+                this.subscription!.on('keepalive', () => {
+                    this.subscription$.next({action: 'keepalive'});
+                });
+                this.subscription!.on('terminated', () => {
+                    this.subscription$.next({action: 'terminated'});
+                });
+                
+                const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
+                
+                // this.subscription.on('changed', (dataValue: DataValue) => {
+                //     this.subscription$.next({action: 'changed', value: dataValue});
+                // });
+                // this.subscription.addListener('changed', (dataValue: DataValue) => {
+                //     this.subscription$.next({action: 'changed', value: dataValue});
+                // });
+                const monitoredItems: any[] = [];
+                nodes.forEach((node: string) => {
+                    monitoredItems.push(ClientMonitoredItem.create(
+                        this.subscription!,
+                        {
                             attributeId: AttributeIds.Value,
                             nodeId: `ns=${namespaceIndex};${node}`
-                        }
-                    }), {
-                        discardOldest: true,
-                        queueSize: 10,
-                        samplingInterval: 100
-                    },
-                    TimestampsToReturn.Both
-                );
-                this.subscription.on('started', () => {
-                    this.subscription$.next({action: 'created'})
-                    console.log('subscription started!');
-                })
-                this.subscription.on('changed', (dataValue: DataValue) => {
-                    this.subscription$.next({action: 'changed', value: dataValue});
+                        },
+                        {
+                            discardOldest: true,
+                            queueSize: 10,
+                            samplingInterval: 100
+                        },
+                        TimestampsToReturn.Both
+                    ).on('changed', (dataValue: DataValue) => {
+                        this.subscription$.next({action: 'changed', value: dataValue});
+                    }));
                 });
-                this.subscription.addListener('changed', (dataValue: DataValue) => {
-                    this.subscription$.next({action: 'changed', value: dataValue});
-                });
-                this.subscription.on('terminated', () => {
-                    this.subscription$.next({action: 'terminated'});
-                    resolve();
-                });
+               resolve();
+                
             } catch (error) {
                 reject(error);
             }

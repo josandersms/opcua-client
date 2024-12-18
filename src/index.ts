@@ -20,11 +20,14 @@ const main = async (): Promise<void> => {
             console.log('client created');
             opcuaClient.subscription$.subscribe((message: any) => {
                 switch(message['action']) {
+                    case 'changed': 
+                        console.log('got dataValue of', message['value']);
+                        break;
                     case 'created': 
                         console.log('subscription created');
                         break;
-                    case 'changed': 
-                        console.log('got dataValue of', message['value']);
+                    case 'keepalive': 
+                        console.log('subscription keepalive');
                         break;
                     case 'terminated': 
                         console.log('subscription terminated');
