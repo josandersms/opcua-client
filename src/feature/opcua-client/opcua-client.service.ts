@@ -173,6 +173,19 @@ export class OPCClient {
         });
     }
 
+    public async readValue(node: string): Promise<DataValue> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
+                const result = await this.session?.read({ attributeId: AttributeIds.Value, nodeId: `ns=${namespaceIndex};${node}` });
+                if (!result) throw('could not read tag!');
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     public async browseAllNodes(): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {

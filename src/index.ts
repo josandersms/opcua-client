@@ -23,6 +23,7 @@ const main = async (): Promise<void> => {
             subscription$.subscribe((dataValue: any) => {
                 console.log('subscribed and got dataValue of', dataValue);
             });
+            console.log(await opcuaClient.readValue(nodeId3));
             //const opcuaClient: OPCClientBasic = new OPCClientBasic(endpointUrl, namespace);
             //opcuaClient.readTag(nodeId);
             //opcuaClient.writeTag(nodeId, 10011, DataType.Int32);
