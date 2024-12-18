@@ -5,9 +5,9 @@ import { Environment } from './environment';
 
 const endpointUrl: string = Environment.opcuaServer.endpointUri;
 const namespace: string = Environment.opcuaServer.namespace;
-// const nodeId: string = 's=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.LS01_ManPosnHMI';
-//const nodeId: string = 's=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.aLeakDetectedZone1';
-const nodeId: string = 's=ChevronLD.Model.Variable1';
+const nodeId: string = 's=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.LS01_ManPosnHMI';
+const nodeId1: string = 's=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.aLeakDetectedZone1';
+const nodeId2: string = 's=ChevronLD.Model.Variable1';
 //aLeakDetectedZone1
 
 const main = async (): Promise<void> => {
@@ -17,7 +17,10 @@ const main = async (): Promise<void> => {
             const opcuaClient: OPCClient = new OPCClient(Environment.opcuaServer.endpointUri, namespace);
             await opcuaClient.ready;
             console.log('client created');
-
+            const subscription$ = await opcuaClient.subscribe([nodeId, nodeId1, nodeId2]);
+            subscription$.subscribe((dataValue: any) => {
+                console.log('subscribed and got dataValue of', dataValue);
+            });
             //const opcuaClient: OPCClientBasic = new OPCClientBasic(endpointUrl, namespace);
             //opcuaClient.readTag(nodeId);
             //opcuaClient.writeTag(nodeId, 10011, DataType.Int32);
