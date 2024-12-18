@@ -31,7 +31,7 @@ const main = async (): Promise<void> => {
                         break;
                 }
             });
-            opcuaClient.subscribe([nodeId, nodeId1, nodeId2, nodeId3]);
+            await opcuaClient.subscribe([nodeId, nodeId1, nodeId2, nodeId3]);
             //console.log(await opcuaClient.readValue(nodeId3));
             //const opcuaClient: OPCClientBasic = new OPCClientBasic(endpointUrl, namespace);
             //opcuaClient.readTag(nodeId);
