@@ -19,6 +19,7 @@ const main = async (): Promise<void> => {
             await opcuaClient.ready;
             console.log('client created');
             const subscription$ = await opcuaClient.subscribe([nodeId, nodeId1, nodeId2, nodeId3]);
+            console.log('subscription created');
             subscription$.subscribe((dataValue: any) => {
                 console.log('subscribed and got dataValue of', dataValue);
             });

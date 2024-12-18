@@ -142,6 +142,7 @@ export class OPCClient {
                     publishingEnabled: true,
                     priority: 10,
                 });
+               
                 subscription.monitorItems(
                     nodes.map((node: string) => {
                         return {
@@ -155,6 +156,12 @@ export class OPCClient {
                     },
                     TimestampsToReturn.Both
                 );
+                subscription.on('started', () => {
+                    console.log('subscription started!');
+                })
+                subscription.on('changed', (dataValue: DataValue) => {
+                    this.subscription$.next(dataValue);
+                });
                 subscription.addListener('changed', (dataValue: DataValue) => {
                     this.subscription$.next(dataValue);
                 });
