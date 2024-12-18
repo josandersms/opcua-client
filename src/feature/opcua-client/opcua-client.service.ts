@@ -142,8 +142,9 @@ export class OPCClient {
                     publishingEnabled: true,
                     priority: 10,
                 });
+                this.subscription = subscription;
                
-                subscription.monitorItems(
+                this.subscription.monitorItems(
                     nodes.map((node: string) => {
                         return {
                             attributeId: AttributeIds.Value,
@@ -156,13 +157,13 @@ export class OPCClient {
                     },
                     TimestampsToReturn.Both
                 );
-                subscription.on('started', () => {
+                this.subscription.on('started', () => {
                     console.log('subscription started!');
                 })
-                subscription.on('changed', (dataValue: DataValue) => {
+                this.subscription.on('changed', (dataValue: DataValue) => {
                     this.subscription$.next(dataValue);
                 });
-                subscription.addListener('changed', (dataValue: DataValue) => {
+                this.subscription.addListener('changed', (dataValue: DataValue) => {
                     this.subscription$.next(dataValue);
                 });
                 resolve(this.subscription$);
