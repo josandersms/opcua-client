@@ -125,13 +125,16 @@ export class OPCClient {
                         },
                         TimestampsToReturn.Both
                     ).on('changed', (dataValue: DataValue) => {
+                        const nodeNameLength: number = node.split('=')[1].split('.').length -1;
+                        const nodeName: string = node.split('=')[1].split('.')[nodeNameLength];
                         this.subscription$.next({action: 'changed', value: {
-                                code: dataValue.statusCode.toString(),
+                                code: dataValue.statusCode.value.toString(),
                                 serverTimestamp: dataValue.serverTimestamp,
                                 sourceTimestamp: dataValue.sourceTimestamp,
-                                tag: nodes[node.split('.').length -1],
-                                type2: DataType[dataValue.value.dataType],
-                                type: dataValue.value.dataType.toString(),
+                                nodeNameLength: nodeNameLength,
+                                tag: nodeName,
+                                type: DataType[dataValue.value.dataType],
+                                typeCode: dataValue.value.dataType.toString(),
                                 value: dataValue.value.value
                             }
                         });
