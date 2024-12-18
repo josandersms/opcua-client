@@ -11,6 +11,8 @@ export class MqttService {
     constructor(uri: string) {
         this.ready = new Promise(async (resolve, reject) => {
             try {
+               
+                this.client = await connectAsync(uri);
                 this.client.on('connect', () => {
                     this.status.next('CONNECTED');
                 });
@@ -20,8 +22,6 @@ export class MqttService {
                 this.client.on('error', (error) => {
                     this.status.next(`ERROR: ${error}`);
                 });
-                this.client = await connectAsync(uri);
-                
                 resolve(undefined);
             } catch (error) {
                 this.status.next('ERROR');
