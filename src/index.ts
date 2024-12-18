@@ -10,7 +10,7 @@ const nodeId2: string = 's=ChevronLD.Model.Variable1';
 const main = async (): Promise<void> => {
     return new Promise(async (resolve, reject) => {
         try {
-            const mqttService: MqttService = new MqttService('mqtt://aio-broker:1883');
+            const mqttService: MqttService = new MqttService(Environment.mqttBroker.uri);
             mqttService.status.subscribe((status: string) => {
                 console.log('MQTT Service Status is ==>', status);
             });
