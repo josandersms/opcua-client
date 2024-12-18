@@ -130,7 +130,7 @@ export class OPCClient {
         });
     }
     
-    public async subscribe(nodes: string[]): Promise<Subject<any>> {
+    public async subscribe(nodes: string[]): Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
                 const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
@@ -158,15 +158,19 @@ export class OPCClient {
                     TimestampsToReturn.Both
                 );
                 this.subscription.on('started', () => {
+                    this.subscription$.next({action: 'created'})
                     console.log('subscription started!');
                 })
                 this.subscription.on('changed', (dataValue: DataValue) => {
-                    this.subscription$.next(dataValue);
+                    this.subscription$.next({action: 'changed', value: dataValue});
                 });
                 this.subscription.addListener('changed', (dataValue: DataValue) => {
-                    this.subscription$.next(dataValue);
+                    this.subscription$.next({action: 'changed', value: dataValue});
                 });
-                resolve(this.subscription$);
+                this.subscription.on('terminated', () => {
+                    this.subscription$.next({action: 'terminated'});
+                    resolve();
+                });
             } catch (error) {
                 reject(error);
             }

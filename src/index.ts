@@ -18,12 +18,21 @@ const main = async (): Promise<void> => {
             const opcuaClient: OPCClient = new OPCClient(Environment.opcuaServer.endpointUri, namespace);
             await opcuaClient.ready;
             console.log('client created');
-            const subscription$ = await opcuaClient.subscribe([nodeId, nodeId1, nodeId2, nodeId3]);
-            console.log('subscription created');
-            subscription$.subscribe((dataValue: any) => {
-                console.log('subscribed and got dataValue of', dataValue);
+            opcuaClient.subscription$.subscribe((message: any) => {
+                switch(message['action']) {
+                    case 'created': 
+                        console.log('subscription created');
+                        break;
+                    case 'changed': 
+                        console.log('got dataValue of', message['value']);
+                        break;
+                    case 'terminated': 
+                        console.log('subscription terminated');
+                        break;
+                }
             });
-            console.log(await opcuaClient.readValue(nodeId3));
+            opcuaClient.subscribe([nodeId, nodeId1, nodeId2, nodeId3]);
+            //console.log(await opcuaClient.readValue(nodeId3));
             //const opcuaClient: OPCClientBasic = new OPCClientBasic(endpointUrl, namespace);
             //opcuaClient.readTag(nodeId);
             //opcuaClient.writeTag(nodeId, 10011, DataType.Int32);
