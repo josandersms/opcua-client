@@ -1,4 +1,5 @@
 import { OPCClient } from './feature/opcua-client/opcua-client.service';
+import { MqttService } from './common/mqtt';
 import { Environment } from './environment';
 
 const nodeId: string = 's=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.LS01_ManPosnHMI';
@@ -9,6 +10,15 @@ const nodeId2: string = 's=ChevronLD.Model.Variable1';
 const main = async (): Promise<void> => {
     return new Promise(async (resolve, reject) => {
         try {
+            const mqttService: MqttService = new MqttService('mqtt://aio-broker:1883');
+            mqttService.status.subscribe((status: string) => {
+                console.log('MQTT Service Status is ==>', status);
+            });
+            mqttService.subscriptions$.subscribe((mqmessage) => {
+                console.log('MQTT Service Subscription received ==>', mqmessage);
+            });
+            await mqttService.ready;
+            mqttService.subscribeTopic('azedge/dmqtt/selftest/#')
             console.log('Creating Client...');
             const opcuaClient: OPCClient = new OPCClient(Environment.opcuaServer.endpointUri, Environment.opcuaServer.namespace);
             await opcuaClient.ready;
