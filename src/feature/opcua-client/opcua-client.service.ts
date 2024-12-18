@@ -128,6 +128,7 @@ export class OPCClient {
                         const nodeNameLength: number = node.split('=')[1].split('.').length -1;
                         const nodeName: string = node.split('=')[1].split('.')[nodeNameLength];
                         this.subscription$.next({action: 'changed', value: {
+                                codeCode: dataValue.statusCode.toString(),
                                 code: dataValue.statusCode.value.toString(),
                                 fullTag: node,
                                 namespace: this.namespace,
