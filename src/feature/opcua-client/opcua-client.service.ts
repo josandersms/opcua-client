@@ -133,6 +133,7 @@ export class OPCClient {
     public async subscribe(nodes: string[]): Promise<Subject<any>> {
         return new Promise(async (resolve, reject) => {
             try {
+                const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
                 const subscription: ClientSubscription = await this.createSubscription(this.session!, {
                     requestedPublishingInterval: 1000,
                     requestedLifetimeCount: 100,
@@ -145,7 +146,7 @@ export class OPCClient {
                     nodes.map((node: string) => {
                         return {
                             attributeId: AttributeIds.Value,
-                            nodeId: `ns=${this.namespace};${node}`
+                            nodeId: `ns=${namespaceIndex};${node}`
                         }
                     }), {
                         discardOldest: true,
