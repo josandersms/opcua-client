@@ -21,6 +21,8 @@ import {
     WriteValueOptions,
     DataValueLike,
     ClientSubscription,
+    ServerSession,
+    CreateSubscriptionRequestOptions,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
   
@@ -31,37 +33,39 @@ export class OPCClient {
     private isClientCreated$: Subject<boolean> = new Subject<boolean>();
     private isConnected$: Subject<boolean> = new Subject<boolean>();
     private namespace: string;
-    private nodeId: string;
     private session?: ClientSession;
-    private subscription?: Promise<ClientSubscription>;
+    private subscription?: ClientSubscription;
+    public subscription$: Subject<any> = new Subject<any>();
     public ready: Promise<any>;
 
-    constructor(endpointUrl: string, namespace: string, nodeId: string) {
+    constructor(endpointUrl: string, namespace: string) {
         this.endpointUrl = endpointUrl;
         this.namespace = namespace;
-        this.nodeId = nodeId;
         
-        this.isConnected$.subscribe((status: boolean) => {
-            console.log(status);
-            if (status) {
-                this.client?.withSessionAsync(this.endpointUrl, async (session: ClientSession) => { 
-                    this.session = session;
-                    console.log('Session created!');
-                    this.createSubscription();
-                    console.log('Subscription created!');
-                });
-            }
-        });
-        this.createClient();
+        // this.isConnected$.subscribe((status: boolean) => {
+        //     console.log(status);
+        //     if (status) {
+        //         this.client?.withSessionAsync(this.endpointUrl, async (session: ClientSession) => { 
+        //             this.session = session;
+        //             console.log('Session created!');
+        //             this.createSubscription();
+        //             console.log('Subscription created!');
+        //         });
+        //     }
+        // });
+        
                
-        this.client.addListener('backoff', () => console.log('retrying connection'));
-        this.client.addListener('connected', () => {
-            console.log('OPCUA Client Connected!');
-            this.isConnected$.next(true);
-        });
+        // this.client.addListener('backoff', () => console.log('retrying connection'));
+        // this.client.addListener('connected', () => {
+        //     console.log('OPCUA Client Connected!');
+        //     this.isConnected$.next(true);
+        // });
         this.ready = new Promise(async (resolve, reject) => {
             try {
-
+                this.client = await this.createClient();
+                await this.client.connect(this.endpointUrl);
+                this.session = await this.createSession(this.client);
+                
                 resolve(undefined);
             } catch (error) {
                 reject(error);
@@ -84,18 +88,80 @@ export class OPCClient {
         
     }
 
-    public createClient(): void {
+    private async createClient(endpointMustExist: boolean = false, initialDelay: number = 2000, maxDelay: number = 10 * 1000, maxRetry: number = 2): Promise<OPCUAClient> {
+        return new Promise((resolve) => {
+            resolve(OPCUAClient.create({
+                endpointMustExist: endpointMustExist,
+                connectionStrategy: {
+                    maxRetry: maxRetry,
+                    initialDelay: initialDelay,
+                    maxDelay: maxDelay,
+                }
+            }));
+        });
+    }
 
-        this.client = OPCUAClient.create({
-            endpointMustExist: false,
-            connectionStrategy: {
-                maxRetry: 2,
-                initialDelay: 2000,
-                maxDelay: 10 * 1000,
+    private async createSession(client: OPCUAClient): Promise<ClientSession> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                client.createSession2((error: Error | null, session?: ClientSession) => {
+                    if (error) {
+                        throw(error);
+                    } else if (session) {
+                        resolve(session);
+                    } else {
+                        throw('No session was returned!');
+                    }
+                });
+            } catch (error) {
+                reject(error);
             }
         });
-        this.isClientCreated$.next(true);
+    }
 
+    private async createSubscription(session: ClientSession, options: CreateSubscriptionRequestOptions): Promise<ClientSubscription> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const subscription: ClientSubscription = await session.createSubscription2(options);
+                resolve(subscription);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+    
+    public async subscribe(nodes: string[]): Promise<Subject<any>> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const subscription: ClientSubscription = await this.createSubscription(this.session!, {
+                    requestedPublishingInterval: 1000,
+                    requestedLifetimeCount: 100,
+                    requestedMaxKeepAliveCount: 20,
+                    maxNotificationsPerPublish: 10,
+                    publishingEnabled: true,
+                    priority: 10,
+                });
+                subscription.monitorItems(
+                    nodes.map((node: string) => {
+                        return {
+                            attributeId: AttributeIds.Value,
+                            nodeId: `ns=${this.namespace};${node}`
+                        }
+                    }), {
+                        discardOldest: true,
+                        queueSize: 10,
+                        samplingInterval: 100
+                    },
+                    TimestampsToReturn.Both
+                );
+                subscription.addListener('changed', (dataValue: DataValue) => {
+                    this.subscription$.next(dataValue);
+                });
+                resolve(this.subscription$);
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     public async browseAllNodes(): Promise<any> {
@@ -126,86 +192,69 @@ export class OPCClient {
         });
     }
 
-    public async browseWithClient(): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                await this.client!.withSessionAsync(this.endpointUrl, async (session: ClientSession) => {
-                    const namespaceIndex = (await session.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
-                    // const browseResult: BrowseResult = (await session.browse({
-                    //     nodeId: `ns=9;s=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.LS01_ManPosnHMI`,
-                    //     referenceTypeId: ReferenceTypeIds.Organizes,
-                    //     includeSubtypes: true,
-                    //     browseDirection: BrowseDirection.Forward
-                    // })) as BrowseResult;
-                    // console.log('====>> GOT BROWSE RESULT', browseResult);
-                    // for (const reference of browseResult!.references!) {
-                    //     console.log('->', reference.browseName.toString());
-                    // };
-                    //console.log('===>>> NAMESPACES ARE:', await session.readNamespaceArray());
+    // public async browseWithClient(): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             await this.client!.withSessionAsync(this.endpointUrl, async (session: ClientSession) => {
+    //                 const namespaceIndex = (await session.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
+    //                 // const browseResult: BrowseResult = (await session.browse({
+    //                 //     nodeId: `ns=9;s=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.LS01_ManPosnHMI`,
+    //                 //     referenceTypeId: ReferenceTypeIds.Organizes,
+    //                 //     includeSubtypes: true,
+    //                 //     browseDirection: BrowseDirection.Forward
+    //                 // })) as BrowseResult;
+    //                 // console.log('====>> GOT BROWSE RESULT', browseResult);
+    //                 // for (const reference of browseResult!.references!) {
+    //                 //     console.log('->', reference.browseName.toString());
+    //                 // };
+    //                 //console.log('===>>> NAMESPACES ARE:', await session.readNamespaceArray());
                     
-                    // console.log(
-                    //     browseResult?.references?.map((r: ReferenceDescription) => r.browseName.toString())
-                    // );
-                    // const browsePath = makeBrowsePath('RootFolder', '/Types');
-                    // const result = (await session.translateBrowsePath(browsePath));
-                    // console.log('===>>>> BROWSE PATH RESULT:', result);
-                    // result.targets?.forEach((res) => {
-                    //     console.log(res);
-                    //     console.log(res.targetId.toString());
-                    // });
-                    const dataValue = await session.read({ nodeId: `ns=${namespaceIndex};${this.nodeId}`, attributeId: AttributeIds.Value });
-                    if (dataValue.statusCode !== StatusCodes.Good) {
-                        console.log('Could not read ', this.nodeId);
-                        console.log(dataValue);
+    //                 // console.log(
+    //                 //     browseResult?.references?.map((r: ReferenceDescription) => r.browseName.toString())
+    //                 // );
+    //                 // const browsePath = makeBrowsePath('RootFolder', '/Types');
+    //                 // const result = (await session.translateBrowsePath(browsePath));
+    //                 // console.log('===>>>> BROWSE PATH RESULT:', result);
+    //                 // result.targets?.forEach((res) => {
+    //                 //     console.log(res);
+    //                 //     console.log(res.targetId.toString());
+    //                 // });
+    //                 const dataValue = await session.read({ nodeId: `ns=${namespaceIndex};${this.nodeId}`, attributeId: AttributeIds.Value });
+    //                 if (dataValue.statusCode !== StatusCodes.Good) {
+    //                     console.log('Could not read ', this.nodeId);
+    //                     console.log(dataValue);
                         
-                    } else {
-                        console.log(` value of ${this.nodeId.toString()} = ${dataValue.value.toString()}`);
-                        const nodeToWrite: WriteValueOptions = {
-                            nodeId: `ns=${namespaceIndex};${this.nodeId}`,
-                            value: {
-                                value: {
-                                    dataType: DataType.Float,
-                                    value: 10014
-                                }
-                            }
-                        };
-                        session.write(nodeToWrite, (response) => {
-                            if (!response?.cause) {
-                                console.log('wrote tag!');
-                                console.log(response?.message);
-                            } else {
-                                console.log('COULD NOT WRITE TAG!');
-                            }
-                        });
-                    }
+    //                 } else {
+    //                     console.log(` value of ${this.nodeId.toString()} = ${dataValue.value.toString()}`);
+    //                     const nodeToWrite: WriteValueOptions = {
+    //                         nodeId: `ns=${namespaceIndex};${this.nodeId}`,
+    //                         value: {
+    //                             value: {
+    //                                 dataType: DataType.Float,
+    //                                 value: 10014
+    //                             }
+    //                         }
+    //                     };
+    //                     session.write(nodeToWrite, (response) => {
+    //                         if (!response?.cause) {
+    //                             console.log('wrote tag!');
+    //                             console.log(response?.message);
+    //                         } else {
+    //                             console.log('COULD NOT WRITE TAG!');
+    //                         }
+    //                     });
+    //                 }
                     
-                });
-                resolve(undefined);
-            } catch(error) {
-                reject(error);
-            }
-        });
-    }
+    //             });
+    //             resolve(undefined);
+    //         } catch(error) {
+    //             reject(error);
+    //         }
+    //     });
+    // }
 
-    public async createSubscription(): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                console.log('creating subscription');
-                this.subscription = this.session?.createSubscription2({
-                    requestedPublishingInterval: 1000,
-                    requestedLifetimeCount: 100,
-                    requestedMaxKeepAliveCount: 20,
-                    maxNotificationsPerPublish: 10,
-                    publishingEnabled: true,
-                    priority: 10,
-                });
-                resolve(undefined);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-    public async monitorSubscription(): Promise<any> {
+
+    //public async monitorSubscription(): Promise<any> {
         
         
         // const namespaceIndex = (await session.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
@@ -229,39 +278,39 @@ export class OPCClient {
         // await new Promise((resolve) => setTimeout(resolve, 10000));
         // await subscription.terminate();
 
-    }
-    public async writeTag(): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                await this.client!.withSessionAsync(this.endpointUrl, async (session: ClientSession) => {
-                    const namespaceIndex = (await session.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
+   // }
+    // public async writeTag(): Promise<any> {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             await this.client!.withSessionAsync(this.endpointUrl, async (session: ClientSession) => {
+    //                 const namespaceIndex = (await session.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
                    
-                    const nodeToWrite: WriteValueOptions = {
-                        nodeId: `ns=${namespaceIndex};${this.nodeId}`,
-                        value: {
-                            value: {
-                                dataType: DataType.Float,
-                                value: 10014
-                            }
-                        }
-                    };
-                    session.write(nodeToWrite, (response) => {
-                        if (!response?.cause) {
-                            console.log('wrote tag!');
-                            console.log(response?.message);
-                        } else {
-                            console.log('COULD NOT WRITE TAG!');
-                        }
-                    });
+    //                 const nodeToWrite: WriteValueOptions = {
+    //                     nodeId: `ns=${namespaceIndex};${this.nodeId}`,
+    //                     value: {
+    //                         value: {
+    //                             dataType: DataType.Float,
+    //                             value: 10014
+    //                         }
+    //                     }
+    //                 };
+    //                 session.write(nodeToWrite, (response) => {
+    //                     if (!response?.cause) {
+    //                         console.log('wrote tag!');
+    //                         console.log(response?.message);
+    //                     } else {
+    //                         console.log('COULD NOT WRITE TAG!');
+    //                     }
+    //                 });
                     
                     
-                });
-                resolve(undefined);
-            } catch(error) {
-                reject(error);
-            }
-        });
-    }
+    //             });
+    //             resolve(undefined);
+    //         } catch(error) {
+    //             reject(error);
+    //         }
+    //     });
+    // }
 }
     //   await client.withSessionAsync(endpointUrl, async (session) => {
      

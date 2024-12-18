@@ -1,12 +1,4 @@
-import {
-    OPCUAClient,
-    DataType,
-    ClientSession,
-    WriteValueOptions,
-    AttributeIds,
-    StatusCodes,
-  } from 'node-opcua';
-  
+import { AttributeIds, ClientSession, DataType, OPCUAClient, StatusCodes, WriteValueOptions } from 'node-opcua';
  
 export class OPCClientBasic {
     private endpointUrl: string;
@@ -28,6 +20,7 @@ export class OPCClientBasic {
                         maxDelay: 10 * 1000,
                     }
                 });
+                
                 await client!.withSessionAsync(this.endpointUrl, async (session: ClientSession) => {
                     const namespaceIndex = (await session.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
                     const dataValue = await session.read({ nodeId: `ns=${namespaceIndex};${tag}`, attributeId: AttributeIds.Value });
@@ -71,11 +64,10 @@ export class OPCClientBasic {
                     };
                     session.write(nodeToWrite, (response) => {
                         if (!response?.cause) {
-                            console.log('wrote tag!');
-                            console.log(response);
-                            console.log(response?.message);
+                            console.log(`Tag ${nodeToWrite.nodeId} written with value: ${nodeToWrite.value?.value?.value}`);
+                            if (response) console.log(response);
                         } else {
-                            console.log('COULD NOT WRITE TAG!');
+                            console.log(`COULD NOT WRITE TAG ${nodeToWrite.nodeId}`);
                         }
                     });
                     
@@ -88,63 +80,3 @@ export class OPCClientBasic {
         });
     }
 }
-    //   await client.withSessionAsync(endpointUrl, async (session) => {
-     
-
-    //     // step 5: install a subscription and monitored item
-    //     const subscription = await session.createSubscription2({
-    //       requestedPublishingInterval: 1000,
-    //       requestedLifetimeCount: 100,
-    //       requestedMaxKeepAliveCount: 20,
-    //       maxNotificationsPerPublish: 10,
-    //       publishingEnabled: true,
-    //       priority: 10,
-    //     });
-  
-    //     subscription
-    //       .on("started", () =>
-    //         console.log(
-    //           "subscription started - subscriptionId=",
-    //           subscription.subscriptionId
-    //         )
-    //       )
-    //       .on("keepalive", () => console.log("keepalive"))
-    //       .on("terminated", () => console.log("subscription terminated"));
-  
-    //     const monitoredItem = await subscription.monitor(
-    //       {
-    //         nodeId,
-    //         attributeId: AttributeIds.Value,
-    //       },
-    //       {
-    //         samplingInterval: 100,
-    //         discardOldest: true,
-    //         queueSize: 10,
-    //       },
-    //       TimestampsToReturn.Both
-    //     );
-  
-    //     monitoredItem.on("changed", (dataValue: DataValue) => {
-    //       console.log(` Temperature = ${dataValue.value.value.toString()}`);
-    //     });
-  
-    //     await new Promise((resolve) => setTimeout(resolve, 10000));
-    //     await subscription.terminate();
-  
-    //     const statusCode = await session.write({
-    //       nodeId: "ns=7;s=Scalar_Static_Double",
-    //       attributeId: AttributeIds.Value,
-    //       value: {
-    //         statusCode: StatusCodes.Good,
-    //         sourceTimestamp: new Date(),
-    //         value: {
-    //           dataType: DataType.Double,
-    //           value: 25.0,
-    //         },
-    //       },
-    //     });
-    //     console.log("statusCode = ", statusCode.toString());
-  
-    //     console.log(" closing session");
-    //   });
-
