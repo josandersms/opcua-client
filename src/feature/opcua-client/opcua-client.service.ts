@@ -88,9 +88,9 @@ export class OPCClient {
             resolve(OPCUAClient.create({
                 discoveryUrl: options.discoveryUrl,
                 connectionStrategy: {
-                    initialDelay: options.connectionStrategy?.initialDelay || 2000,
-                    maxDelay: options.connectionStrategy?.maxDelay || 10 * 1000,
-                    maxRetry: options.connectionStrategy?.maxRetry || 2 
+                    initialDelay: options.connectionStrategy?.initialDelay || 6000,
+                    maxDelay: options.connectionStrategy?.maxDelay || 60 * 1000,
+                    maxRetry: options.connectionStrategy?.maxRetry || 5
                 },
                 endpointMustExist: options.endpointMustExist || false,
                 securityMode: options.securityMode || MessageSecurityMode.None,
