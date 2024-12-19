@@ -88,12 +88,12 @@ export class OPCClient {
     private async createClient(options: OPCUAClientOptions): Promise<OPCUAClient> {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
-                discoveryUrl: options.discoveryUrl,
+                //discoveryUrl: options.discoveryUrl,
                 //certificateFile: options.certificateFile,
                 clientCertificateManager: options.clientCertificateManager,
                 connectionStrategy: {
                     initialDelay: options.connectionStrategy?.initialDelay || 3000,
-                    maxDelay: options.connectionStrategy?.maxDelay || 30 * 1000,
+                    maxDelay: options.connectionStrategy?.maxDelay || 10 * 1000,
                     maxRetry: options.connectionStrategy?.maxRetry || 2
                 },
                 endpointMustExist: options.endpointMustExist || false,
