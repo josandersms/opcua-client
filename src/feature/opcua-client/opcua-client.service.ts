@@ -19,6 +19,7 @@ import {
     ClientMonitoredItem,
     SecurityPolicy,
     MessageSecurityMode,
+    OPCUAClientOptions,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
   
@@ -37,7 +38,7 @@ export class OPCClient {
         this.namespace = namespace;
         this.ready = new Promise(async (resolve, reject) => {
             try {
-                this.client = await this.createClient();
+                this.client = await this.createClient({securityPolicy: SecurityPolicy.Basic128});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
@@ -80,20 +81,19 @@ export class OPCClient {
                 reject(error);
             }
         });
-        
     }
 
-    private async createClient(endpointMustExist: boolean = false, initialDelay: number = 2000, maxDelay: number = 10 * 1000, maxRetry: number = 2, securityMode: MessageSecurityMode = MessageSecurityMode.None, securityPolicy: SecurityPolicy = SecurityPolicy.None): Promise<OPCUAClient> {
+    private async createClient(options: OPCUAClientOptions): Promise<OPCUAClient> {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
                 connectionStrategy: {
-                    initialDelay: initialDelay,
-                    maxDelay: maxDelay,
-                    maxRetry: maxRetry
+                    initialDelay: options.connectionStrategy?.initialDelay || 2000,
+                    maxDelay: options.connectionStrategy?.maxDelay || 10 * 1000,
+                    maxRetry: options.connectionStrategy?.maxRetry || 2 
                 },
-                endpointMustExist: endpointMustExist,
-                securityMode: securityMode,
-                securityPolicy: securityPolicy
+                endpointMustExist: options.endpointMustExist || false,
+                securityMode: options.securityMode || MessageSecurityMode.None,
+                securityPolicy: options.securityPolicy || SecurityPolicy.None
             }));
         });
     }
