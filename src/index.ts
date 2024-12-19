@@ -12,7 +12,7 @@ const main = async (): Promise<void> => {
         try {
             const mqttService: MqttService = new MqttService(Environment.mqttBroker.uri);
             mqttService.status.subscribe((status: string) => {
-                console.log('MQTT Service Status is ==>', status);
+                console.log('MQTT Service Status is now ==>', status);
             });
             mqttService.subscriptions$.subscribe((mqmessage) => {
                 console.log('MQTT Service Subscription received ==>', mqmessage);
@@ -40,6 +40,7 @@ const main = async (): Promise<void> => {
                 }
             });
             await opcuaClient.subscribe([nodeId, nodeId1, nodeId2, nodeId3]);
+            console.log('NAMESPACES ARE==>', await opcuaClient.getNamespaces());
             //console.log(await opcuaClient.readValue(nodeId3));
             //opcuaClient.writeTag(nodeId, 10011, DataType.Int32);
             //opcuaClient.readTag(nodeId);

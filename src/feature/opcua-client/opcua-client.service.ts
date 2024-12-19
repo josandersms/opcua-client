@@ -53,6 +53,34 @@ export class OPCClient {
         });
     }
 
+
+
+    public async browseNamespace(baseNode: string): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex(x => x === this.namespace);
+                if (namespaceIndex === undefined) throw('Namespace not found!');
+                    const browseResult = await this.session!.browse({
+                        nodeId: `ns=${namespaceIndex};${baseNode}`,
+                        browseDirection: BrowseDirection.Forward,
+                        referenceTypeId: ReferenceTypeIds.Organizes
+                    } as BrowseDescriptionLike);
+                    const response: any[] = [];
+                    if (browseResult.statusCode === StatusCodes.Good) {
+                        browseResult.references!.forEach((result) => {
+                            response.push(result);
+                        });
+                    } else {
+                        throw('Could not browse!');
+                    }
+                    resolve(response);
+            } catch (error) {
+                reject(error);
+            }
+        });
+        
+    }
+
     private async createClient(endpointMustExist: boolean = false, initialDelay: number = 2000, maxDelay: number = 10 * 1000, maxRetry: number = 2): Promise<OPCUAClient> {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
@@ -95,6 +123,16 @@ export class OPCClient {
         });
     }
     
+    public async getNamespaces(): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                resolve(this.session!.readNamespaceArray);
+            } catch (error) {
+                reject(error);
+            }                
+        });
+    }
+
     public async subscribe(nodes: string[]): Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -162,33 +200,7 @@ export class OPCClient {
         });
     }
 
-    public async browseAllNodes(): Promise<any> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                await this.client!.withSessionAsync(this.endpointUrl, async (session: ClientSession) => {
-                    const namespaceIndex = (await session.readNamespaceArray()).findIndex(x => x === 'ChevronLD');
-                    if (namespaceIndex === undefined) throw('No namespaces!');
-                    const chevronFolderId = `ns=${namespaceIndex};i=1001`;
-                    const browseResult = await session!.browse({
-                        nodeId: chevronFolderId,
-                        browseDirection: BrowseDirection.Forward,
-                        referenceTypeId: ReferenceTypeIds.Organizes
-                    } as BrowseDescriptionLike);
-
-                    if (browseResult.statusCode === StatusCodes.Good) {
-                        browseResult.references!.forEach((result) => {
-                            console.log('->', makeExpandedNodeId(result.nodeId));
-                        });
-                    } else {
-                        throw('Could not browse!');
-                    }
-                });
-                resolve(undefined);
-            } catch (error) {
-                reject(error);
-            }                
-        });
-    }
+    
 
     // public async browseWithClient(): Promise<any> {
     //     return new Promise(async (resolve, reject) => {
