@@ -42,7 +42,7 @@ export class OPCClient {
         this.ready = new Promise(async (resolve, reject) => {
             try {
                 this.clientCertificateManager = await this.createClientCertificateManager({});
-                this.client = await this.createClient({discoveryUrl: `${this.endpointUrl}/discovery`, clientCertificateManager: this.clientCertificateManager, certificateFile: '/own/certs/client_certificate.pem', privateKeyFile: '/own/private/private_key.pem', securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
+                this.client = await this.createClient({discoveryUrl: `${this.endpointUrl}/discovery`, clientCertificateManager: this.clientCertificateManager, certificateFile: 'own/certs/client_certificate.pem', privateKeyFile: 'own/private/private_key.pem', securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
@@ -111,7 +111,7 @@ export class OPCClient {
                     automaticallyAcceptUnknownCertificate: options.automaticallyAcceptUnknownCertificate || true,
                     keySize: options.keySize || 2048,
                     name: options.name,
-                    rootFolder: options.rootFolder || './pki'
+                    rootFolder: options.rootFolder || './pki/'
                 });
                 resolve(clientCertificateManager);
             } catch (error) {
