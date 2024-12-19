@@ -42,7 +42,8 @@ const main = async (): Promise<void> => {
             //await opcuaClient.subscribe([nodeId, nodeId1, nodeId2, nodeId3]);
             await opcuaClient.subscribe([nodeId4]);
             console.log('NAMESPACES ARE==>', await opcuaClient.getNamespaces());
-            //console.log(await opcuaClient.readValue(nodeId3));
+
+            console.log('DIRECT READ IS: ', await opcuaClient.readValue(nodeId4));
             //opcuaClient.writeTag(nodeId, 10011, DataType.Int32);
             //opcuaClient.readTag(nodeId);
             // opcuaClient.writeTag(nodeId2, 10011, DataType.Float);
