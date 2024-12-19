@@ -111,7 +111,7 @@ export class OPCClient {
                     automaticallyAcceptUnknownCertificate: options.automaticallyAcceptUnknownCertificate || true,
                     keySize: options.keySize || 2048,
                     name: options.name,
-                    rootFolder: options.rootFolder || './own'
+                    rootFolder: options.rootFolder || './'
                 });
                 resolve(clientCertificateManager);
             } catch (error) {
