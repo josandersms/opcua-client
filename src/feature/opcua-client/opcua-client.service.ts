@@ -38,7 +38,7 @@ export class OPCClient {
         this.namespace = namespace;
         this.ready = new Promise(async (resolve, reject) => {
             try {
-                this.client = await this.createClient({securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
+                this.client = await this.createClient({discoveryUrl: this.endpointUrl, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
@@ -86,6 +86,7 @@ export class OPCClient {
     private async createClient(options: OPCUAClientOptions): Promise<OPCUAClient> {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
+                discoveryUrl: options.discoveryUrl,
                 connectionStrategy: {
                     initialDelay: options.connectionStrategy?.initialDelay || 2000,
                     maxDelay: options.connectionStrategy?.maxDelay || 10 * 1000,
