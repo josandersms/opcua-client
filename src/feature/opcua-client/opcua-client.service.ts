@@ -20,12 +20,15 @@ import {
     SecurityPolicy,
     MessageSecurityMode,
     OPCUAClientOptions,
+    OPCUACertificateManager,
+    OPCUACertificateManagerOptions,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
   
  
 export class OPCClient {
     private client!: OPCUAClient;
+    private clientCertificateManager!: OPCUACertificateManager;
     private endpointUrl: string;
     private namespace: string;
     private session?: ClientSession;
@@ -38,7 +41,8 @@ export class OPCClient {
         this.namespace = namespace;
         this.ready = new Promise(async (resolve, reject) => {
             try {
-                this.client = await this.createClient({discoveryUrl: this.endpointUrl, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
+                this.clientCertificateManager = await this.createClientCertificateManager({});
+                this.client = await this.createClient({discoveryUrl: this.endpointUrl, clientCertificateManager: this.clientCertificateManager, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
@@ -87,7 +91,8 @@ export class OPCClient {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
                 discoveryUrl: options.discoveryUrl,
-                certificateFile: 'own/certs/client_certificate.pem',
+                certificateFile: 'client_certificate.pem',
+                clientCertificateManager: options.clientCertificateManager,
                 connectionStrategy: {
                     initialDelay: options.connectionStrategy?.initialDelay || 3000,
                     maxDelay: options.connectionStrategy?.maxDelay || 30 * 1000,
@@ -97,6 +102,22 @@ export class OPCClient {
                 securityMode: options.securityMode || MessageSecurityMode.None,
                 securityPolicy: options.securityPolicy || SecurityPolicy.None
             }));
+        });
+    }
+
+    private async createClientCertificateManager(options: OPCUACertificateManagerOptions): Promise<OPCUACertificateManager> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const clientCertificateManager: OPCUACertificateManager = new OPCUACertificateManager({
+                    automaticallyAcceptUnknownCertificate: options.automaticallyAcceptUnknownCertificate || true,
+                    keySize: options.keySize || 2048,
+                    name: options.name,
+                    rootFolder: options.rootFolder || './own/certs'
+                });
+                resolve(clientCertificateManager);
+            } catch (error) {
+                reject(error);
+            }
         });
     }
 
