@@ -126,7 +126,7 @@ export class OPCClient {
     public async getNamespaces(): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
-                resolve(this.session!.readNamespaceArray);
+                resolve(this.session!.readNamespaceArray());
             } catch (error) {
                 reject(error);
             }                
