@@ -42,7 +42,7 @@ export class OPCClient {
         this.ready = new Promise(async (resolve, reject) => {
             try {
                 this.clientCertificateManager = await this.createClientCertificateManager({});
-                this.client = await this.createClient({discoveryUrl: this.endpointUrl, clientCertificateManager: this.clientCertificateManager, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
+                this.client = await this.createClient({discoveryUrl: `${this.endpointUrl}/discovery`, clientCertificateManager: this.clientCertificateManager, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
