@@ -87,9 +87,8 @@ export class OPCClient {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
                 discoveryUrl: options.discoveryUrl,
-                
+                certificateFile: 'own/certs/client_certificate.pem',
                 connectionStrategy: {
-                    
                     initialDelay: options.connectionStrategy?.initialDelay || 3000,
                     maxDelay: options.connectionStrategy?.maxDelay || 30 * 1000,
                     maxRetry: options.connectionStrategy?.maxRetry || 2
