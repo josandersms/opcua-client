@@ -89,7 +89,7 @@ export class OPCClient {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
                 discoveryUrl: options.discoveryUrl,
-                certificateFile: options.certificateFile,
+                //certificateFile: options.certificateFile,
                 clientCertificateManager: options.clientCertificateManager,
                 connectionStrategy: {
                     initialDelay: options.connectionStrategy?.initialDelay || 3000,
@@ -97,7 +97,7 @@ export class OPCClient {
                     maxRetry: options.connectionStrategy?.maxRetry || 2
                 },
                 endpointMustExist: options.endpointMustExist || false,
-                privateKeyFile: options.privateKeyFile,
+                //privateKeyFile: options.privateKeyFile,
                 securityMode: options.securityMode || MessageSecurityMode.None,
                 securityPolicy: options.securityPolicy || SecurityPolicy.None
             }));
