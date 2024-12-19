@@ -87,10 +87,12 @@ export class OPCClient {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
                 discoveryUrl: options.discoveryUrl,
+                
                 connectionStrategy: {
-                    initialDelay: options.connectionStrategy?.initialDelay || 6000,
-                    maxDelay: options.connectionStrategy?.maxDelay || 60 * 1000,
-                    maxRetry: options.connectionStrategy?.maxRetry || 5
+                    
+                    initialDelay: options.connectionStrategy?.initialDelay || 3000,
+                    maxDelay: options.connectionStrategy?.maxDelay || 30 * 1000,
+                    maxRetry: options.connectionStrategy?.maxRetry || 2
                 },
                 endpointMustExist: options.endpointMustExist || false,
                 securityMode: options.securityMode || MessageSecurityMode.None,
