@@ -38,7 +38,7 @@ export class OPCClient {
         this.namespace = namespace;
         this.ready = new Promise(async (resolve, reject) => {
             try {
-                this.client = await this.createClient({securityPolicy: SecurityPolicy.Basic128});
+                this.client = await this.createClient({securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
