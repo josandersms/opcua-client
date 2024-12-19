@@ -42,7 +42,7 @@ export class OPCClient {
         this.ready = new Promise(async (resolve, reject) => {
             try {
                 this.clientCertificateManager = await this.createClientCertificateManager({});
-                this.client = await this.createClient({discoveryUrl: `${this.endpointUrl}/discovery`, clientCertificateManager: this.clientCertificateManager, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
+                this.client = await this.createClient({discoveryUrl: `${this.endpointUrl}/discovery`, clientCertificateManager: this.clientCertificateManager, certificateFile: 'client_certificate.pem', privateKeyFile: 'private_key.pem', securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
@@ -59,8 +59,6 @@ export class OPCClient {
             }
         });
     }
-
-
 
     public async browseNamespace(baseNode: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
@@ -91,7 +89,7 @@ export class OPCClient {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
                 discoveryUrl: options.discoveryUrl,
-                certificateFile: './own/certs/client_certificate.pem',
+                certificateFile: options.certificateFile,
                 clientCertificateManager: options.clientCertificateManager,
                 connectionStrategy: {
                     initialDelay: options.connectionStrategy?.initialDelay || 3000,
@@ -99,6 +97,7 @@ export class OPCClient {
                     maxRetry: options.connectionStrategy?.maxRetry || 2
                 },
                 endpointMustExist: options.endpointMustExist || false,
+                privateKeyFile: options.privateKeyFile,
                 securityMode: options.securityMode || MessageSecurityMode.None,
                 securityPolicy: options.securityPolicy || SecurityPolicy.None
             }));
@@ -112,7 +111,7 @@ export class OPCClient {
                     automaticallyAcceptUnknownCertificate: options.automaticallyAcceptUnknownCertificate || true,
                     keySize: options.keySize || 2048,
                     name: options.name,
-                    rootFolder: options.rootFolder || './'
+                    rootFolder: options.rootFolder || '.'
                 });
                 resolve(clientCertificateManager);
             } catch (error) {
