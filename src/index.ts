@@ -7,6 +7,7 @@ const nodeId1: string = 's=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet
 const nodeId3: string = 's=ChevronLD.CommDrivers.RAEtherNet_IPDriver1.RAEtherNet_IPStation1.Tags.Controller Tags.BS01_Bypass_SolVlv_Output';
 const nodeId2: string = 's=ChevronLD.Model.Variable1';
 const nodeId4: string = 's=ChevronLD.L320ER.aiokepwaretest';
+//ns=2;s=Rockwell.1756-L85E/B.FluidDemoTags.cmd_Pump1_Enable
 const main = async (): Promise<void> => {
     return new Promise(async (resolve, reject) => {
         try {

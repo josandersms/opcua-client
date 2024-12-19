@@ -17,6 +17,8 @@ import {
     ClientSubscription,
     CreateSubscriptionRequestOptions,
     ClientMonitoredItem,
+    SecurityPolicy,
+    MessageSecurityMode,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
   
@@ -81,15 +83,17 @@ export class OPCClient {
         
     }
 
-    private async createClient(endpointMustExist: boolean = false, initialDelay: number = 2000, maxDelay: number = 10 * 1000, maxRetry: number = 2): Promise<OPCUAClient> {
+    private async createClient(endpointMustExist: boolean = false, initialDelay: number = 2000, maxDelay: number = 10 * 1000, maxRetry: number = 2, securityMode: MessageSecurityMode = MessageSecurityMode.None, securityPolicy: SecurityPolicy = SecurityPolicy.None): Promise<OPCUAClient> {
         return new Promise((resolve) => {
             resolve(OPCUAClient.create({
-                endpointMustExist: endpointMustExist,
                 connectionStrategy: {
-                    maxRetry: maxRetry,
                     initialDelay: initialDelay,
                     maxDelay: maxDelay,
-                }
+                    maxRetry: maxRetry
+                },
+                endpointMustExist: endpointMustExist,
+                securityMode: securityMode,
+                securityPolicy: securityPolicy
             }));
         });
     }
