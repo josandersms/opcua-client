@@ -15,6 +15,7 @@ export const Environment: environment = {
         options: {
             applicationName: 'MSFT-IAI-OPCUA-Client',
             applicationUri: 'urn:cvxleakse30:MSFT-IAI-OPCUA-Client',
+            clientName: 'MSFT-IAI-OPCUA-Client',
             connectionStrategy: {
                 initialDelay: 3000,
                 maxDelay: 10 * 1000,
