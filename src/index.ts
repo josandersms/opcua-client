@@ -11,7 +11,7 @@ const nodeId4: string = 's=ChevronLD.L320ER.aiokepwaretest';
 const main = async (): Promise<void> => {
     return new Promise(async (resolve, reject) => {
         try {
-            const mqttService: MqttService = new MqttService(Environment.mqttBroker.uri);
+            const mqttService: MqttService = new MqttService(Environment.mqttBroker!.uri!);
             mqttService.status.subscribe((status: string) => {
                 console.log('MQTT Service Status is now ==>', status);
             });
@@ -21,7 +21,7 @@ const main = async (): Promise<void> => {
             await mqttService.ready;
             mqttService.subscribeTopic('azedge/dmqtt/selftest/#')
             console.log('Creating Client...');
-            const opcuaClient: OPCClient = new OPCClient(Environment.opcuaServer.endpointUri, Environment.opcuaServer.namespace);
+            const opcuaClient: OPCClient = new OPCClient(Environment.opcuaServer.endpointUri, Environment.opcuaServer!.namespace!);
             await opcuaClient.ready;
             console.log('Client Created');
             opcuaClient.subscription$.subscribe((message: any) => {

@@ -2,18 +2,13 @@ import {
     AttributeIds,
     OPCUAClient,
     DataValue,
-    BrowseResult,
-    ReferenceDescription,
     TimestampsToReturn,
     StatusCodes,
     DataType,
     ClientSession,
     BrowseDirection,
-    ResultMask,
-    NodeIdType,
     BrowseDescriptionLike,
     ReferenceTypeIds,
-    makeExpandedNodeId,
     ClientSubscription,
     CreateSubscriptionRequestOptions,
     ClientMonitoredItem,
@@ -24,8 +19,8 @@ import {
     OPCUACertificateManagerOptions,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
+import { Environment } from '~app/environment';
   
- 
 export class OPCClient {
     private client!: OPCUAClient;
     private clientCertificateManager!: OPCUACertificateManager;
@@ -41,8 +36,13 @@ export class OPCClient {
         this.namespace = namespace;
         this.ready = new Promise(async (resolve, reject) => {
             try {
-                this.clientCertificateManager = await this.createClientCertificateManager({});
-                this.client = await this.createClient({discoveryUrl: `${this.endpointUrl}/discovery`, clientCertificateManager: this.clientCertificateManager, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
+                
+                if (Environment.opcuaServer.options.securityPolicy !== 'Invalid' && Environment.opcuaServer.options.securityPolicy !== 'None') {
+                    this.clientCertificateManager = await this.createClientCertificateManager(Environment.opcuaServer?.certificateManager || {});
+                }
+                this.client = await this.createClient(this.buildClientOptions());
+                console.log(this.buildClientOptions());
+                    //discoveryUrl: `${this.endpointUrl}/discovery`, clientCertificateManager: this.clientCertificateManager, securityPolicy: SecurityPolicy.Basic256Sha256, securityMode: MessageSecurityMode.SignAndEncrypt});
                 await this.client.connect(this.endpointUrl);
                 this.session = await this.createSession(this.client);
                 this.subscription = await this.createSubscription(this.session!, {
@@ -84,6 +84,18 @@ export class OPCClient {
             }
         });
     }
+    
+
+    
+    
+    private buildClientOptions(): OPCUAClientOptions {
+        const options: OPCUAClientOptions = {};
+        let property: keyof typeof Environment.opcuaServer.options;
+        for (property in Environment.opcuaServer.options) {
+            options[property] = Environment.opcuaServer.options[property]
+        }
+        return options;
+    }
 
     private async createClient(options: OPCUAClientOptions): Promise<OPCUAClient> {
         return new Promise((resolve) => {
@@ -99,7 +111,7 @@ export class OPCClient {
                 endpointMustExist: options.endpointMustExist || false,
                 //privateKeyFile: options.privateKeyFile,
                 securityMode: options.securityMode || MessageSecurityMode.None,
-                securityPolicy: options.securityPolicy || SecurityPolicy.None
+                securityPolicy: options.securityPolicy || SecurityPolicy.Basic256Sha256
             }));
         });
     }
