@@ -17,6 +17,9 @@ import {
     OPCUAClientOptions,
     OPCUACertificateManager,
     OPCUACertificateManagerOptions,
+    X509IdentityToken,
+    UserIdentityToken,
+    UserTokenType,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
 import { Environment } from '~app/environment';
@@ -135,7 +138,11 @@ export class OPCClient {
     private async createSession(client: OPCUAClient): Promise<ClientSession> {
         return new Promise(async (resolve, reject) => {
             try {
-                client.createSession2((error: Error | null, session?: ClientSession) => {
+                client.createSession2({
+                    certificateData: client.getCertificate(),
+                    privateKey: client.privateKeyFile,
+                    type: UserTokenType.Certificate
+                }, (error: Error | null, session?: ClientSession) => {
                     if (error) {
                         throw(error);
                     } else if (session) {
