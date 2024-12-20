@@ -139,9 +139,11 @@ export class OPCClient {
         return new Promise(async (resolve, reject) => {
             try {
                 client.createSession2({
-                    certificateData: client.getCertificate(),
-                    privateKey: client.privateKeyFile,
-                    type: UserTokenType.Certificate
+                    //certificateData: client.getCertificate(),
+                    //privateKey: client.privateKeyFile,
+                    password: '',
+                    userName: 'Anyonymous',
+                    type: UserTokenType.UserName
                 }, (error: Error | null, session?: ClientSession) => {
                     if (error) {
                         throw(error);
