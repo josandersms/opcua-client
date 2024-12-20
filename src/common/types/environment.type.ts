@@ -43,6 +43,13 @@ export type environment = {
                 sendBufferSize?: number
             },
             transportTimeout?: number // in ms
+        },
+        sessionOptions?: {
+            password?: string;
+            policyId?: string;
+            privateKey?: string;
+            type: 'Anonymous' | 'Certificate' | 'Username',
+            userName?: string;
         }
     },
     isProduction?: boolean

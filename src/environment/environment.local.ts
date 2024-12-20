@@ -24,6 +24,9 @@ export const Environment: environment = {
             endpointMustExist: false, 
             securityMode: 'SignAndEncrypt',
             securityPolicy: 'Basic256Sha256'
+        },
+        sessionOptions: {
+            type: 'Anonymous'
         }
     },
     isProduction: false

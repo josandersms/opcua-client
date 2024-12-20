@@ -141,9 +141,7 @@ export class OPCClient {
                 client.createSession2({
                     //certificateData: client.getCertificate(),
                     //privateKey: client.privateKeyFile,
-                    password: '',
-                    userName: 'Anyonymous',
-                    type: UserTokenType.UserName
+                    type: UserTokenType.Anonymous
                 }, (error: Error | null, session?: ClientSession) => {
                     if (error) {
                         throw(error);
