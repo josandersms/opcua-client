@@ -20,6 +20,7 @@ import {
     X509IdentityToken,
     UserIdentityToken,
     UserTokenType,
+    UserIdentityInfo,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
 import { Environment } from '~app/environment';
@@ -39,7 +40,6 @@ export class OPCClient {
         this.namespace = namespace;
         this.ready = new Promise(async (resolve, reject) => {
             try {
-                
                 if (Environment.opcuaServer.options.securityPolicy !== 'Invalid' && Environment.opcuaServer.options.securityPolicy !== 'None') {
                     this.clientCertificateManager = await this.createClientCertificateManager(Environment.opcuaServer?.certificateManager || {});
                 }
@@ -87,10 +87,7 @@ export class OPCClient {
             }
         });
     }
-    
 
-    
-    
     private buildClientOptions(): OPCUAClientOptions {
         const options: OPCUAClientOptions = {};
         let property: keyof typeof Environment.opcuaServer.options;
@@ -138,6 +135,9 @@ export class OPCClient {
     private async createSession(client: OPCUAClient): Promise<ClientSession> {
         return new Promise(async (resolve, reject) => {
             try {
+                const sessionOptions: UserIdentityInfo = {
+                    type: Environment.opcuaServer.sessionOptions?.type ? _enumerationDataType.get(Environment.opcuaServer.sessionOptions.type]] : UserTokenType.Anonymous
+                };
                 client.createSession2({
                     //certificateData: client.getCertificate(),
                     //privateKey: client.privateKeyFile,
