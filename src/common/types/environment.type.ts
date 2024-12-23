@@ -45,6 +45,7 @@ export type environment = {
             transportTimeout?: number // in ms
         },
         sessionOptions?: {
+            certificateData?: string;
             password?: string;
             policyId?: string;
             privateKey?: string;

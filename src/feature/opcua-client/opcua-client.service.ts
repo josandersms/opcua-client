@@ -1,3 +1,4 @@
+import { utimes } from 'fs';
 import {
     AttributeIds,
     OPCUAClient,
@@ -21,6 +22,7 @@ import {
     UserIdentityToken,
     UserTokenType,
     UserIdentityInfo,
+    WriteValueOptions,
   } from 'node-opcua';
   import { Subject } from 'rxjs';
 import { Environment } from '~app/environment';
@@ -135,14 +137,36 @@ export class OPCClient {
     private async createSession(client: OPCUAClient): Promise<ClientSession> {
         return new Promise(async (resolve, reject) => {
             try {
-                const sessionOptions: UserIdentityInfo = {
-                    type: Environment.opcuaServer.sessionOptions?.type ? _enumerationDataType.get(Environment.opcuaServer.sessionOptions.type]] : UserTokenType.Anonymous
-                };
-                client.createSession2({
-                    //certificateData: client.getCertificate(),
-                    //privateKey: client.privateKeyFile,
-                    type: UserTokenType.Anonymous
-                }, (error: Error | null, session?: ClientSession) => {
+
+                let sessionOptions: UserIdentityInfo;
+                switch (Environment.opcuaServer.sessionOptions?.type) {
+                    case 'Anonymous':
+                        sessionOptions = {
+                            type: UserTokenType.Anonymous
+                        };
+                        break;
+                    case 'Certificate': 
+                        sessionOptions = {
+                            certificateData: client.getCertificate(),
+                            privateKey: client.privateKeyFile,
+                            type: UserTokenType.Certificate
+                        };
+                        break;
+                    case 'Username': 
+                        sessionOptions = {
+                            password: Environment.opcuaServer.sessionOptions?.password!,
+                            type: UserTokenType.UserName,
+                            userName: Environment.opcuaServer.sessionOptions?.userName!
+                        };
+                        break;
+                    default:
+                        sessionOptions = {
+                            type: UserTokenType.Anonymous
+                        };
+                        break;
+                }
+               
+                client.createSession2(sessionOptions, (error: Error | null, session?: ClientSession) => {
                     if (error) {
                         throw(error);
                     } else if (session) {
@@ -245,6 +269,34 @@ export class OPCClient {
         });
     }
 
+    public async writeTag(tag: string, value: any, valueType: DataType): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const namespaceIndex = (await this.session!.readNamespaceArray()).findIndex((namespace) => namespace === this.namespace);
+                const nodeToWrite: WriteValueOptions = {
+                    attributeId: AttributeIds.Value,  
+                    nodeId: `ns=${namespaceIndex};${tag}`,
+                    value: {
+                        value: {
+                            dataType: valueType,
+                            value: value
+                        }
+                    }
+                };
+                const response = await this.session?.write(nodeToWrite);
+                resolve(response);
+                // if (response) {
+                //     if (!response?.cause) resolve(`Tag ${nodeToWrite.nodeId} written with value: ${nodeToWrite.value?.value?.value}`);
+                //     resolve(response);
+                // } else {
+                //     throw(`COULD NOT WRITE TAG ${nodeToWrite.nodeId}`);
+                // }
+                // });
+            } catch(error) {
+                reject(error);
+            }
+        });
+    }
     
 
     // public async browseWithClient(): Promise<any> {
