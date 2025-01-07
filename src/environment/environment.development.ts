@@ -2,7 +2,8 @@ import { environment } from '../common/types/environment.type';
 
 export const Environment: environment = {
     mqttBroker: {
-        uri: 'mqtt://localhost:1883'
+        southboundTopic: 'southbound/commanding',
+        uri: 'mqtt://10.1.0.5:1883'
     },
     opcuaServer: {
         certificateManager: {

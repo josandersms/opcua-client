@@ -2,6 +2,7 @@ import { environment } from '../common/types/environment.type';
 
 export const Environment: environment = {
     mqttBroker: {
+        southboundTopic: process.env['MQTT_BROKER__SOUTHBOUND_TOPIC'],
         uri: process.env['MQTT_BROKER__URI']
     },
     opcuaServer: {

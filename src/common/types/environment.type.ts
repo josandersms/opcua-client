@@ -1,5 +1,6 @@
 export type environment = {
     mqttBroker?: {
+        southboundTopic?: string;
         uri?: string
     },
     opcuaServer: {

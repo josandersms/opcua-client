@@ -30,6 +30,18 @@ export class MqttService {
         });
     }
 
+    public async publishMessage(topic: string, message: any): Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.client.publishAsync(topic, message);
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        });
+
+    }
+
     public async subscribeTopic(topic: string): Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
