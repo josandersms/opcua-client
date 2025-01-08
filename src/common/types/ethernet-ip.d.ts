@@ -577,10 +577,11 @@ declare module 'ethernet-ip' {
         export function validateCommand(cmd: any): boolean;
         export namespace commands {
             export let NOP: number;
-            let ListServices_1: number;
-            export { ListServices_1 as ListServices };
-            let ListIdentity_1: number;
-            export { ListIdentity_1 as ListIdentity };
+            export let ListServices: number;
+            // export { ListServices_1 as ListServices };
+            // let ListIdentity_1: number;
+            export let ListIdentity: number;
+            // export { ListIdentity_1 as ListIdentity };
             export let ListInterfaces: number;
             export let RegisterSession: number;
             export let UnregisterSession: number;

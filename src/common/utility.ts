@@ -17,3 +17,7 @@ export const asyncForEach = async (input: any[], next: any): Promise<void> => {
         await next(input[i], i, input);
     }
 }
+
+export const checkTrue = (input: string): boolean => {
+    return /^true$/i.test(input);
+}

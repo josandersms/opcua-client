@@ -1,36 +1,27 @@
 import { environment } from '../common/types/environment.type';
+import { checkTrue } from '~app/common/utility';
 
 export const Environment: environment = {
     mqttBroker: {
-        southboundTopic: 'southbound/commanding',
-        uri: 'mqtt://10.1.0.5:1883'
+        southboundTopic: process.env['OPCUAC__MQTT_BROKER__SOUTHBOUND_TOPIC'],
+        uri: process.env['OPCUAC__MQTT_BROKER__URI']
     },
     opcuaServer: {
-        certificateManager: {
-            automaticallyAcceptUnknownCertificate: true,
-            keySize: 2048,
-            rootFolder: './pki/'
-        },
-        endpointUri: 'opc.tcp://127.0.0.1:59100', //endpointUri: 'opc.tcp://192.168.50.15:59100',
-        namespace: 'ChevronLDTest',
+        endpointUri: process.env['OPCUAC__OPCUA_SERVER__ENDPOINT_URI']!,
+        namespace: process.env['OPCUAC__OPCUA_SERVER__NAMESPACE']!,
         options: {
-            applicationName: 'MSFT-IAI-OPCUA-Client',
-            applicationUri: 'urn:cvxleakse30:MSFT-IAI-OPCUA-Client',
-            clientName: 'MSFT-IAI-OPCUA-Client',
-            connectionStrategy: {
-                initialDelay: 3000,
-                maxDelay: 10 * 1000,
-                maxRetry: 2,
+            applicationName: process.env['OPCUAC__OPCUA_SERVER__APPLICATION_NAME'],
+            applicationUri: process.env['OPCUAC__OPCUA_SERVER__APPLICATION_URI'],
+            clientName: process.env['OPCUAC__OPCUA_SERVER__CLIENT_NAME']
+,            connectionStrategy: {
+                initialDelay: parseInt(process.env['OPCUAC__OPCUA_SERVER__CONNECTION_STRATEGY__INITIAL_DELAY'] as string),
+                maxDelay: parseInt(process.env['OPCUAC__OPCUA_SERVER__CONNECTION_STRATEGY__MAX_DELAY'] as string),
+                maxRetry: parseInt(process.env['OPCUAC__OPCUA_SERVER__CONNECTION_STRATEGY__MAX_RETRY'] as string),
             },
-            endpointMustExist: false, 
-            securityMode: 'None',
-            securityPolicy: 'None'
-        },
-        sessionOptions: {
-            password: 'Marsden1',
-            type: 'Username',
-            userName: 'TestUser'
+            endpointMustExist: checkTrue(process.env['OPCUAC__OPCUA_SERVER__ENDPOINT_MUST_EXIST'] as string), 
+            securityMode: process.env['OPCUAC__OPCUA_SERVER__SECURITY_MODE'],
+            securityPolicy: process.env['OPCUAC__OPCUA_SERVER__SECURITY_POLICY'],
         }
     },
-    isProduction: false
+    isProduction: true
 };
